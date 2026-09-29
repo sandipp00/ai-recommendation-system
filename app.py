@@ -563,6 +563,10 @@ if st.button("✦  Discover Movies", type="primary", use_container_width=True):
                         title = html.escape(str(movie.get("title", "Untitled")))
                         overview = html.escape(str(movie.get("overview", "")))
                         genres = str(movie.get("genres", "") or "")
+                        poster_url = str(movie.get("poster_url", "") or "")
+                        vote_average = movie.get("vote_average")
+                        vote_count = movie.get("vote_count")
+                        release_year = movie.get("release_year")
 
                         genre_html = "".join(
                             f'<span class="genre">{html.escape(g.strip())}</span>'
@@ -570,17 +574,32 @@ if st.button("✦  Discover Movies", type="primary", use_container_width=True):
                             if g.strip()
                         )
 
+                        rating_html = ""
+                        if vote_average is not None:
+                            rating_html = f'<span class="movie-rating">★ {float(vote_average):.1f}</span>'
+                            if vote_count is not None:
+                                rating_html += f'<span class="movie-votes">{int(vote_count):,} votes</span>'
+                        year_html = f'<span class="movie-year">{int(release_year)}</span>' if release_year else ""
+                        poster_html = (
+                            f'<img class="movie-poster" src="{html.escape(poster_url)}" alt="{title} poster">'
+                            if poster_url else ""
+                        )
+
                         card = f"""
                         <div class="movie-card">
-                            <div class="movie-number">MATCH {index:02d}</div>
-                            <div class="movie-title">{title}</div>
-                            <div>{genre_html}</div>
-                            <div class="movie-overview">{overview}</div>
-                            <div class="score-row">
-                                <div class="score">Overall <strong>{float(movie.get("score", 0)):.3f}</strong></div>
+                            {poster_html}
+                            <div class="movie-content">
+                                <div class="movie-number">MATCH {index:02d}</div>
+                                <div class="movie-title">{title}</div>
+                                <div class="movie-meta">{rating_html}{year_html}</div>
+                                <div>{genre_html}</div>
+                                <div class="movie-overview">{overview}</div>
+                                <div class="score-row">
+                                    <div class="score">Match <strong>{float(movie.get("score", 0)):.3f}</strong></div>
                                 <div class="score">Content <strong>{float(movie.get("content_score", 0)):.3f}</strong></div>
                                 <div class="score">Semantic <strong>{float(movie.get("semantic_score", 0)):.3f}</strong></div>
-                                <div class="score">Popularity <strong>{float(movie.get("popularity_score", 0)):.3f}</strong></div>
+                                    <div class="score">Rating <strong>{float(movie.get("popularity_score", 0)):.3f}</strong></div>
+                                </div>
                             </div>
                         </div>
                         """
