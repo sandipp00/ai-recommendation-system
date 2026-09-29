@@ -261,10 +261,124 @@ st.markdown(
     }
 
     .sidebar-note {
-        color: #8e92a3;
+        color: #858a9b;
+        font-size: 0.78rem;
+        line-height: 1.6;
+        margin-top: 0.9rem;
+    }
+
+    .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.15rem 0 1.8rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        margin-bottom: 1.7rem;
+    }
+
+    .sidebar-logo {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        background: linear-gradient(135deg, #7c68ff, #4cbfe9);
+        color: #ffffff;
+        font-size: 1rem;
+        box-shadow: 0 8px 22px rgba(91, 99, 255, 0.25);
+    }
+
+    .sidebar-brand-name {
+        font-family: 'Space Grotesk', sans-serif;
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    .sidebar-brand-name span {
+        color: #8f82ff;
+    }
+
+    .sidebar-section-label {
+        color: #666b7b;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin: 0.2rem 0 0.7rem 0;
+    }
+
+    .settings-card {
+        padding: 0.9rem;
+        margin: 0.5rem 0 0.9rem 0;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 15px;
+        background: rgba(255,255,255,0.025);
+    }
+
+    .settings-title {
+        color: #f2f3f6;
+        font-size: 0.84rem;
+        font-weight: 600;
+        margin-bottom: 0.15rem;
+    }
+
+    .settings-subtitle {
+        color: #777c8d;
+        font-size: 0.7rem;
+    }
+
+    .api-status-card {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.85rem 0.9rem;
+        margin-top: 1.5rem;
+        border: 1px solid rgba(64,210,150,0.16);
+        border-radius: 15px;
+        background: linear-gradient(135deg, rgba(64,210,150,0.06), rgba(64,210,150,0.025));
+    }
+
+    .api-dot {
+        width: 8px;
+        height: 8px;
+        flex: 0 0 8px;
+        border-radius: 50%;
+        background: #57d99b;
+        box-shadow: 0 0 10px rgba(87,217,155,0.65);
+    }
+
+    .api-status-title {
+        color: #d8f8e8;
         font-size: 0.76rem;
-        line-height: 1.55;
-        margin-top: 1.2rem;
+        font-weight: 600;
+    }
+
+    .api-status-subtitle {
+        color: #718879;
+        font-size: 0.65rem;
+        margin-top: 0.12rem;
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stSlider"] {
+        padding-top: 0.2rem;
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] {
+        background: #8b7cff;
+        border-color: #8b7cff;
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stSlider"] [data-baseweb="slider"] > div > div {
+        background: linear-gradient(90deg, #7c68ff, #4cbfe9);
+    }
+
+    [data-testid="stSidebar"] .stExpander {
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 13px;
+        background: rgba(255,255,255,0.02);
     }
 
     .footer {
@@ -298,32 +412,73 @@ st.markdown(
 # Sidebar
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.markdown('<div class="brand">CINEMIND <span>AI</span></div>', unsafe_allow_html=True)
-    st.markdown("### Search settings")
+    st.markdown(
+        """
+        <div class="sidebar-brand">
+            <div class="sidebar-logo">✦</div>
+            <div class="sidebar-brand-name">CINEMIND <span>AI</span></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    api_url = st.text_input(
-        "API endpoint",
-        value=API_URL,
-        help="FastAPI backend used by the recommendation interface.",
+    st.markdown('<div class="sidebar-section-label">Discovery</div>', unsafe_allow_html=True)
+
+    st.markdown(
+        """
+        <div class="settings-card">
+            <div class="settings-title">Recommendation depth</div>
+            <div class="settings-subtitle">How many matches should we find?</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     top_k = st.slider(
-        "Recommendations",
+        "Recommendation count",
         min_value=1,
         max_value=10,
         value=5,
+        label_visibility="collapsed",
+        help="Number of movies returned by each search.",
     )
 
     st.markdown(
-        '<div class="status-pill">● API-powered recommendations</div>',
+        f"""
+        <div style="display:flex;justify-content:space-between;color:#777c8d;font-size:0.68rem;margin-top:-0.25rem;">
+            <span>Focused</span>
+            <strong style="color:#bdb6ff;">{top_k} matches</strong>
+            <span>Explore</span>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
     st.markdown(
         """
+        <div class="api-status-card">
+            <div class="api-dot"></div>
+            <div>
+                <div class="api-status-title">Recommendation engine online</div>
+                <div class="api-status-subtitle">FastAPI · live connection</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.expander("Advanced settings"):
+        api_url = st.text_input(
+            "API endpoint",
+            value=API_URL,
+            help="FastAPI backend used by the recommendation interface.",
+        )
+
+    st.markdown(
+        """
         <div class="sidebar-note">
-        Describe the mood, genre, story, characters, or themes you want.
-        CineMind converts natural language into ranked movie recommendations.
+            Describe a mood, genre, story, character, or theme.
+            CineMind turns your words into ranked movie matches.
         </div>
         """,
         unsafe_allow_html=True,
