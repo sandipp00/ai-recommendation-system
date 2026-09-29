@@ -379,7 +379,7 @@ The Streamlit frontend now provides two complementary discovery modes:
 - **Poster-first cards** — ratings, release years, genres, and concise overviews.
 - **Live-data caching** — discovery collections are cached briefly in the Streamlit layer to reduce repeated API calls.
 
-TMDB's Discover API supports filtering and sorting by ratings, vote counts, release dates, and other movie attributes; CineMind uses those capabilities for the live collection views. citeturn1search2
+TMDB's Discover API supports filtering and sorting by ratings, vote counts, release dates, and other movie attributes; CineMind uses those capabilities for the live collection views.
 
 ## Engineering Highlights
 
