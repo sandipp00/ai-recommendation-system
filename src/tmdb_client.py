@@ -53,18 +53,36 @@ class TMDBClient:
         sort_by: str = "vote_average.desc",
         vote_count_gte: int = 300,
         language: str = "en-US",
+        **filters: Any,
     ) -> list[dict[str, Any]]:
-        """Return a page of high-signal TMDB movie candidates."""
+        """Return a page of TMDB movies using discover filters."""
+        params: dict[str, Any] = {
+            "include_adult": "false",
+            "include_video": "false",
+            "language": language,
+            "page": page,
+            "sort_by": sort_by,
+            "vote_count.gte": vote_count_gte,
+        }
+        params.update(filters)
+        payload = self._get("/discover/movie", params)
+        return payload.get("results", [])
+
+    def trending_movies(self, window: str = "week") -> list[dict[str, Any]]:
+        """Return TMDB movies trending in the selected time window."""
+        if window not in {"day", "week"}:
+            raise ValueError("window must be 'day' or 'week'.")
         payload = self._get(
-            "/discover/movie",
-            {
-                "include_adult": "false",
-                "include_video": "false",
-                "language": language,
-                "page": page,
-                "sort_by": sort_by,
-                "vote_count.gte": vote_count_gte,
-            },
+            f"/trending/movie/{window}",
+            {"language": "en-US"},
+        )
+        return payload.get("results", [])
+
+    def movie_recommendations(self, movie_id: int) -> list[dict[str, Any]]:
+        """Return TMDB recommendations for a movie."""
+        payload = self._get(
+            f"/movie/{int(movie_id)}/recommendations",
+            {"language": "en-US", "page": 1},
         )
         return payload.get("results", [])
 
