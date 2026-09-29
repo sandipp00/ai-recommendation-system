@@ -17,6 +17,12 @@ services:
         value: "false"
       - key: SEMANTIC_ENABLED
         value: "false"
+      - key: TMDB_ENABLED
+        value: "false"
+      - key: TMDB_PAGES
+        value: "3"
+      - key: TMDB_MINIMUM_VOTES
+        value: "300"
 
   - type: web
     name: ai-recommendation-ui
