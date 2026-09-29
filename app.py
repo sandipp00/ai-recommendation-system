@@ -5,7 +5,9 @@ import os
 import requests
 import streamlit as st
 
-API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000").rstrip("/")
+if not API_URL.startswith(("http://", "https://")):
+    API_URL = f"https://{API_URL}"
 
 
 st.set_page_config(
