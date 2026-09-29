@@ -4,20 +4,24 @@ from pathlib import Path
 
 from src.content_recommender import ContentRecommender
 from src.data_loader import build_movie_profile, load_movies
-from src.hybrid_recommender import HybridRecommender
+from src.hybrid_recommender import HybridRecommender, LightweightRecommender
 from src.preprocessing import clean_movies
-from src.semantic_recommender import SemanticRecommender
+
+
+def _prepare_movies(dataset_path: str | Path):
+    movies = load_movies(dataset_path)
+    movies = clean_movies(movies)
+    return build_movie_profile(movies)
 
 
 def build_hybrid_recommender(
     dataset_path: str | Path,
     semantic_model: str = "all-MiniLM-L6-v2",
 ) -> HybridRecommender:
-    """Build the complete development recommendation pipeline."""
-    movies = load_movies(dataset_path)
-    movies = clean_movies(movies)
-    movies = build_movie_profile(movies)
+    """Build the full semantic + lexical recommendation pipeline."""
+    from src.semantic_recommender import SemanticRecommender
 
+    movies = _prepare_movies(dataset_path)
     content_recommender = ContentRecommender(movies)
     semantic_recommender = SemanticRecommender(
         movies,
@@ -28,4 +32,17 @@ def build_hybrid_recommender(
         movies,
         content_recommender,
         semantic_recommender,
+    )
+
+
+def build_light_recommender(
+    dataset_path: str | Path,
+) -> LightweightRecommender:
+    """Build a low-memory pipeline without Sentence Transformers or PyTorch."""
+    movies = _prepare_movies(dataset_path)
+    content_recommender = ContentRecommender(movies)
+
+    return LightweightRecommender(
+        movies,
+        content_recommender,
     )
