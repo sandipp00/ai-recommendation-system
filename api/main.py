@@ -56,7 +56,13 @@ def build_service() -> RAGRecommender:
         "all-MiniLM-L6-v2",
     )
     llm_enabled = os.getenv("LLM_ENABLED", "true").lower() in {"1", "true", "yes"}
-    # Render Free is intentionally kept in low-memory mode unless explicitly overridden.\n    # Local development retains the full semantic pipeline by default.\n    default_semantic_enabled = "false" if os.getenv("RENDER") == "true" else "true"\n    semantic_enabled = os.getenv(\n        "SEMANTIC_ENABLED",\n        default_semantic_enabled,\n    ).lower() in {"1", "true", "yes"}
+    # Render Free is intentionally kept in low-memory mode unless explicitly overridden.
+    # Local development retains the full semantic pipeline by default.
+    default_semantic_enabled = "false" if os.getenv("RENDER") == "true" else "true"
+    semantic_enabled = os.getenv(
+        "SEMANTIC_ENABLED",
+        default_semantic_enabled,
+    ).lower() in {"1", "true", "yes"}
     llm_model = os.getenv(
         "LLM_MODEL",
         "EleutherAI/gpt-neo-125M",
