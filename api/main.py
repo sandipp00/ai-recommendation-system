@@ -162,7 +162,6 @@ def create_app(rag_recommender: RAGRecommender | None = None) -> FastAPI:
     def health() -> dict[str, str]:
         return {"status": "ok", "service": "recommendation-api"}
 
-    @app.post("/recommend", response_model=RecommendationResponse)
     @app.get("/browse/{category}", response_model=BrowseResponse)
     def browse(category: str) -> BrowseResponse:
         """Return a curated live TMDB discovery collection."""
@@ -231,6 +230,7 @@ def create_app(rag_recommender: RAGRecommender | None = None) -> FastAPI:
                 detail="TMDB similar-movie request failed.",
             ) from exc
 
+    @app.post("/recommend", response_model=RecommendationResponse)
     def recommend(request: RecommendationRequest) -> RecommendationResponse:
         active_service = service or build_service()
 
