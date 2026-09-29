@@ -367,6 +367,20 @@ For a larger production experiment, the architecture can be connected to the **T
 
 See [DATA_CARD.md](DATA_CARD.md) for dataset details and limitations.
 
+## Cinematic Discovery Experience
+
+The Streamlit frontend now provides two complementary discovery modes:
+
+- **AI Discovery** — natural-language recommendations powered by the retrieval + RAG pipeline.
+- **Live TMDB collections** — Trending, Top Rated, New Releases, and Hidden Gems.
+- **Mood signals** — optional mood preference can be combined with a natural-language request.
+- **Quick Vibes** — one-click prompts for common viewing moods.
+- **More Like This** — live TMDB recommendations from a selected movie.
+- **Poster-first cards** — ratings, release years, genres, and concise overviews.
+- **Live-data caching** — discovery collections are cached briefly in the Streamlit layer to reduce repeated API calls.
+
+TMDB's Discover API supports filtering and sorting by ratings, vote counts, release dates, and other movie attributes; CineMind uses those capabilities for the live collection views. citeturn1search2
+
 ## Engineering Highlights
 
 This project demonstrates:
