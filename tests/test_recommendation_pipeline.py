@@ -38,3 +38,23 @@ def test_hybrid_pipeline_components_are_compatible():
     )
 
     assert recommender.recommend("test", top_k=2)[0].title == "B"
+
+
+def test_light_pipeline_uses_content_without_semantic_model(tmp_path):
+    from src import recommendation_pipeline
+
+    dataset = tmp_path / "movies.csv"
+    pd.DataFrame(
+        {
+            "title": ["A", "B"],
+            "overview": ["space adventure", "romantic drama"],
+            "genres": ["Science Fiction", "Drama"],
+            "vote_average": [8.0, 7.0],
+        }
+    ).to_csv(dataset, index=False)
+
+    recommender = recommendation_pipeline.build_light_recommender(dataset)
+    results = recommender.recommend("space adventure", top_k=1)
+
+    assert results[0].title == "A"
+    assert results[0].semantic_score == 0.0
