@@ -542,6 +542,12 @@ st.markdown(
 
 st.markdown('<div class="search-label">Describe what you want to watch</div>', unsafe_allow_html=True)
 
+# Apply a prompt selected from a discovery chip before the text-area widget
+# is instantiated. Streamlit does not allow changing a widget's keyed state
+# after that widget has already been created in the current run.
+if "_pending_movie_query" in st.session_state:
+    st.session_state["movie_query"] = st.session_state.pop("_pending_movie_query")
+
 query = st.text_area(
     "movie_query",
     placeholder="Try: A dark sci-fi thriller about artificial intelligence with a mysterious atmosphere...",
@@ -563,7 +569,7 @@ prompt_columns = st.columns(len(prompt_options))
 for column, (label, prompt) in zip(prompt_columns, prompt_options.items()):
     with column:
         if st.button(label, use_container_width=True, key=f"prompt_{label}"):
-            st.session_state["movie_query"] = prompt
+            st.session_state["_pending_movie_query"] = prompt
             st.rerun()
 
 st.write("")
