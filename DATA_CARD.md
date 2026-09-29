@@ -10,7 +10,7 @@ It is intentionally committed because it is small, reproducible, and suitable fo
 
 ## Production Dataset
 
-The planned production dataset is the TMDB 5000 Movie Dataset, which contains movie metadata such as titles, genres, keywords, overviews, release dates, ratings, and vote counts. Public copies describe the movie metadata and a separate credits dataset. citeturn0search0turn0search2
+The planned production dataset is the TMDB 5000 Movie Dataset, which contains movie metadata such as titles, genres, keywords, overviews, release dates, ratings, and vote counts. The commonly used version also has a separate credits dataset.
 
 The full external dataset should be downloaded separately and kept outside Git version control. This avoids unnecessarily redistributing third-party data and keeps the repository lightweight.
 
