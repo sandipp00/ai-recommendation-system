@@ -665,7 +665,8 @@ if st.button("✦  Discover Movies", type="primary", use_container_width=True):
 st.markdown(
     """
     <div class="footer">
-        CineMind AI · Hybrid recommendation + RAG architecture · Built with FastAPI & Streamlit
+        CineMind AI · Hybrid recommendation + RAG architecture · Built with FastAPI & Streamlit<br>
+        <span style="font-size:0.72rem;">This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
     </div>
     """,
     unsafe_allow_html=True,
