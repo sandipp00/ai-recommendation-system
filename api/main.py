@@ -10,6 +10,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from src.rag_recommender import RAGRecommender
+from src.tmdb_client import TMDBClient
+from src.tmdb_recommender import TMDBLiveRecommender
 from src.template_llm import TemplateExplanationLLM
 from src.recommendation_pipeline import build_hybrid_recommender, build_light_recommender
 
@@ -35,6 +37,11 @@ class RecommendationItem(BaseModel):
     popularity_score: float
     overview: str
     genres: str
+    tmdb_id: int | None = None
+    vote_average: float | None = None
+    vote_count: int | None = None
+    release_year: int | None = None
+    poster_url: str = ""
 
 
 class RecommendationResponse(BaseModel):
@@ -67,8 +74,15 @@ def build_service() -> RAGRecommender:
         "LLM_MODEL",
         "EleutherAI/gpt-neo-125M",
     )
+    tmdb_enabled = os.getenv("TMDB_ENABLED", "false").lower() in {"1", "true", "yes"}
 
-    if semantic_enabled:
+    if tmdb_enabled and (os.getenv("TMDB_API_KEY") or os.getenv("TMDB_ACCESS_TOKEN")):
+        hybrid = TMDBLiveRecommender(
+            TMDBClient(),
+            pages=int(os.getenv("TMDB_PAGES", "3")),
+            minimum_votes=int(os.getenv("TMDB_MINIMUM_VOTES", "300")),
+        )
+    elif semantic_enabled:
         hybrid = build_hybrid_recommender(
             dataset_path,
             semantic_model=semantic_model,
@@ -124,6 +138,11 @@ def create_app(rag_recommender: RAGRecommender | None = None) -> FastAPI:
                 popularity_score=float(item.popularity_score),
                 overview=item.overview,
                 genres=item.genres,
+                tmdb_id=getattr(item, "tmdb_id", None),
+                vote_average=getattr(item, "vote_average", None),
+                vote_count=getattr(item, "vote_count", None),
+                release_year=getattr(item, "release_year", None),
+                poster_url=getattr(item, "poster_url", ""),
             )
             for item in result.candidates
         ]
