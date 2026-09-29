@@ -150,3 +150,92 @@ class HybridRecommender:
             )
 
         return recommendations
+
+
+class LightweightRecommender:
+    """Low-memory recommender for constrained deployments."""
+
+    def __init__(
+        self,
+        movies: pd.DataFrame,
+        content_recommender,
+        content_weight: float = 0.85,
+        popularity_weight: float = 0.15,
+    ) -> None:
+        if movies.empty:
+            raise ValueError("Movies dataset cannot be empty.")
+
+        if content_weight < 0 or popularity_weight < 0:
+            raise ValueError("Recommendation weights cannot be negative.")
+
+        if content_weight + popularity_weight <= 0:
+            raise ValueError("At least one recommendation weight must be positive.")
+
+        total = content_weight + popularity_weight
+        self.movies = movies.reset_index(drop=True).copy()
+        self.content_recommender = content_recommender
+        self.content_weight = content_weight / total
+        self.popularity_weight = popularity_weight / total
+
+    def _popularity_scores(self) -> dict[str, float]:
+        if "vote_average" not in self.movies.columns:
+            return {title: 0.0 for title in self.movies["title"]}
+
+        scores = pd.to_numeric(
+            self.movies["vote_average"],
+            errors="coerce",
+        ).fillna(0.0)
+
+        if scores.max() == scores.min():
+            normalized = pd.Series(0.0, index=self.movies.index)
+        else:
+            normalized = (scores - scores.min()) / (scores.max() - scores.min())
+
+        return dict(zip(self.movies["title"], normalized, strict=True))
+
+    def recommend(self, query: str, top_k: int = 5) -> list[HybridRecommendation]:
+        """Return content + popularity recommendations without embeddings."""
+        if not query or not query.strip():
+            raise ValueError("Query cannot be empty.")
+
+        if top_k < 1:
+            raise ValueError("top_k must be at least 1.")
+
+        content_results = self.content_recommender.recommend(
+            query,
+            top_k=len(self.movies),
+        )
+        content_scores = {result.title: result.score for result in content_results}
+        popularity_scores = self._popularity_scores()
+
+        ranked = []
+        for title in self.movies["title"]:
+            content_score = float(content_scores.get(title, 0.0))
+            popularity_score = float(popularity_scores.get(title, 0.0))
+            final_score = (
+                self.content_weight * content_score
+                + self.popularity_weight * popularity_score
+            )
+            ranked.append(
+                (title, final_score, content_score, popularity_score)
+            )
+
+        ranked.sort(key=lambda item: item[1], reverse=True)
+        movie_lookup = self.movies.set_index("title", drop=False)
+
+        recommendations = []
+        for title, final_score, content_score, popularity_score in ranked[:top_k]:
+            row = movie_lookup.loc[title]
+            recommendations.append(
+                HybridRecommendation(
+                    title=title,
+                    score=float(final_score),
+                    content_score=content_score,
+                    semantic_score=0.0,
+                    popularity_score=popularity_score,
+                    overview=str(row.get("overview", "")),
+                    genres=str(row.get("genres", "")),
+                )
+            )
+
+        return recommendations
