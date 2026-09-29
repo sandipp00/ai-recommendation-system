@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from src.llm_client import HuggingFaceLLM
 from src.rag_recommender import RAGRecommender
+from src.template_llm import TemplateExplanationLLM
 from src.recommendation_pipeline import build_hybrid_recommender
 
 
@@ -55,6 +56,7 @@ def build_service() -> RAGRecommender:
         "SEMANTIC_MODEL",
         "all-MiniLM-L6-v2",
     )
+    llm_enabled = os.getenv("LLM_ENABLED", "true").lower() in {"1", "true", "yes"}
     llm_model = os.getenv(
         "LLM_MODEL",
         "EleutherAI/gpt-neo-125M",
@@ -64,7 +66,7 @@ def build_service() -> RAGRecommender:
         dataset_path,
         semantic_model=semantic_model,
     )
-    llm = HuggingFaceLLM(model_name=llm_model)
+    llm = HuggingFaceLLM(model_name=llm_model) if llm_enabled else TemplateExplanationLLM()
     return RAGRecommender(hybrid, llm)
 
 
