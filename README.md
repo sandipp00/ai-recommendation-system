@@ -1,54 +1,385 @@
-# AI-Powered Recommendation System
+# AI-Powered Personalized Recommendation System
 
-An end-to-end recommendation platform that combines semantic retrieval, machine-learning ranking, and LLM-powered explanations to generate personalized recommendations from natural-language preferences.
+An end-to-end movie recommendation platform that combines **content-based retrieval, semantic embeddings, hybrid ranking, Retrieval-Augmented Generation (RAG), and a local Hugging Face LLM** to generate personalized recommendations from natural-language preferences.
 
-## Project Status
+## Project Overview
 
-🚧 Step 1 — Project foundation and data pipeline
+Traditional recommendation systems often rely on ratings or item similarity alone. This project combines multiple signals:
 
-## Planned Architecture
+- **TF-IDF content similarity** for interpretable lexical matching
+- **Sentence Transformer embeddings** for semantic retrieval
+- **Hybrid ranking** combining content, semantic, and popularity signals
+- **RAG** to ground the language model in retrieved movie candidates
+- **Hugging Face LLM** for natural-language explanations
+- **FastAPI** for a programmatic backend
+- **Streamlit** for an interactive user interface
+- **Pytest + GitHub Actions** for automated validation
 
-User Query → Query Understanding → Candidate Retrieval → Ranking → LLM Explanation → Recommendations
+The architecture is intentionally modular so individual components can be replaced or improved independently.
 
-## Planned Stack
+## Architecture
 
-- Python
-- Pandas / NumPy
-- Scikit-learn
-- Sentence Transformers
-- Hugging Face Transformers
-- FAISS
-- FastAPI
-- Streamlit
-- Pytest
-- GitHub Actions
+```text
+                    User
+                     │
+                     ▼
+             Streamlit Frontend
+                     │
+                     ▼
+              FastAPI /recommend
+                     │
+                     ▼
+          Hybrid Recommendation Engine
+             ┌───────┴────────┐
+             ▼                ▼
+        TF-IDF Content   Semantic Embeddings
+          Retrieval          Retrieval
+             └───────┬────────┘
+                     ▼
+              Hybrid Ranking
+                     │
+                     ▼
+             Top-K Candidates
+                     │
+                     ▼
+              RAG Context Builder
+                     │
+                     ▼
+             Grounded Prompt
+                     │
+                     ▼
+             Hugging Face LLM
+                     │
+                     ▼
+        Recommendations + Explanation
+```
 
 ## Repository Structure
 
 ```text
 ai-recommendation-system/
-├── app/
 ├── api/
+│   ├── __init__.py
+│   ├── main.py
+│   └── README.md
 ├── data/
-│   ├── raw/
-│   └── processed/
-├── notebooks/
+│   └── raw/
+│       └── sample_movies.csv
 ├── src/
+│   ├── content_recommender.py
+│   ├── data_loader.py
+│   ├── embedding_store.py
+│   ├── hybrid_recommender.py
+│   ├── llm_client.py
+│   ├── pipeline.py
+│   ├── preprocessing.py
+│   ├── prompt_builder.py
+│   ├── rag_context.py
+│   ├── rag_recommender.py
+│   ├── recommendation_pipeline.py
+│   └── semantic_recommender.py
 ├── tests/
+│   ├── test_api.py
+│   ├── test_content_recommender.py
+│   ├── test_data_loader.py
+│   ├── test_embedding_store.py
+│   ├── test_hybrid_recommender.py
+│   ├── test_pipeline.py
+│   ├── test_preprocessing.py
+│   ├── test_rag.py
+│   ├── test_recommendation_pipeline.py
+│   └── test_semantic_recommender.py
+├── ui/
+│   └── README.md
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── app.py
+├── DATA_CARD.md
 ├── requirements.txt
-├── .gitignore
 └── README.md
 ```
 
-## Roadmap
+## Recommendation Pipeline
 
-- [ ] Dataset acquisition and preprocessing
-- [ ] Content-based recommendation engine
-- [ ] Semantic/vector retrieval
-- [ ] LLM integration
-- [ ] RAG recommendation pipeline
-- [ ] FastAPI backend
-- [ ] Streamlit application
-- [ ] Unit and integration tests
-- [ ] CI/CD
-- [ ] Deployment
+### 1. Data preparation
+
+Movie metadata is loaded and normalized before recommendation.
+
+The development dataset contains:
+
+- title
+- genres
+- keywords
+- overview
+- cast
+- director
+- release year
+- rating
+- vote count
+
+The preprocessing layer removes duplicate titles, normalizes text, and handles numeric fields.
+
+### 2. Content-based retrieval
+
+Movie profiles are constructed from textual metadata.
+
+TF-IDF with unigram/bigram features provides a lightweight lexical retrieval signal.
+
+### 3. Semantic retrieval
+
+Movie profiles are embedded using:
+
+```text
+all-MiniLM-L6-v2
+```
+
+Normalized embeddings allow cosine-style similarity search for semantically related queries.
+
+### 4. Hybrid ranking
+
+The default ranking combines:
+
+```text
+Final Score =
+0.35 × Content Score
++ 0.50 × Semantic Score
++ 0.15 × Popularity Score
+```
+
+The weights are configurable in the hybrid recommender.
+
+### 5. RAG
+
+Only retrieved movie candidates are placed into the LLM context.
+
+The prompt explicitly instructs the model to:
+
+- use only the supplied movies
+- avoid inventing movie titles or facts
+- explain why each recommendation matches
+- acknowledge when no strong match exists
+
+This grounds the generated explanation in the retrieval results.
+
+### 6. LLM generation
+
+The development configuration uses:
+
+```text
+EleutherAI/gpt-neo-125M
+```
+
+The model is loaded lazily by the API, avoiding model initialization during application import.
+
+The model can be changed through the `LLM_MODEL` environment variable.
+
+## Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/sandipp00/ai-recommendation-system.git
+cd ai-recommendation-system
+```
+
+### 2. Create a virtual environment
+
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+### 3. Install dependencies
+
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+## Run the API
+
+Start FastAPI:
+
+```powershell
+uvicorn api.main:app --reload
+```
+
+API:
+
+```text
+http://127.0.0.1:8000
+```
+
+Interactive Swagger documentation:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+### Health check
+
+```http
+GET /health
+```
+
+Response:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+### Recommendation request
+
+```http
+POST /recommend
+```
+
+Example:
+
+```json
+{
+  "query": "I want a dark science-fiction movie about artificial intelligence",
+  "top_k": 5
+}
+```
+
+The response includes structured recommendation scores and the generated explanation.
+
+## Run the Streamlit App
+
+Start the API first:
+
+```powershell
+uvicorn api.main:app --reload
+```
+
+Then open another terminal and run:
+
+```powershell
+streamlit run app.py
+```
+
+The Streamlit interface allows users to enter natural-language movie preferences and view:
+
+- recommended movies
+- hybrid scores
+- semantic scores
+- content scores
+- popularity scores
+- genres
+- movie overviews
+- AI-generated explanations
+
+## Configuration
+
+The API supports environment variables:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `RECOMMENDATION_DATASET` | `data/raw/sample_movies.csv` | Movie dataset |
+| `SEMANTIC_MODEL` | `all-MiniLM-L6-v2` | Sentence Transformer model |
+| `LLM_MODEL` | `EleutherAI/gpt-neo-125M` | Hugging Face causal language model |
+
+Example:
+
+```powershell
+$env:LLM_MODEL="EleutherAI/gpt-neo-125M"
+$env:SEMANTIC_MODEL="all-MiniLM-L6-v2"
+uvicorn api.main:app --reload
+```
+
+## Testing
+
+Run the complete test suite:
+
+```powershell
+python -m pytest -q
+```
+
+The tests cover:
+
+- data loading
+- preprocessing
+- TF-IDF recommendations
+- semantic retrieval
+- embedding search
+- hybrid ranking
+- RAG context and prompting
+- recommendation pipeline
+- FastAPI endpoints
+
+Semantic and LLM-heavy components use test doubles where appropriate, so unit tests do not need to download large models.
+
+## Continuous Integration
+
+GitHub Actions automatically runs the test suite for:
+
+- pushes to `main`
+- pull requests targeting `main`
+
+Workflow:
+
+```text
+Checkout
+   ↓
+Python 3.11
+   ↓
+Install dependencies
+   ↓
+pytest -q
+```
+
+## Dataset
+
+The repository includes a small synthetic/reproducible movie dataset for development and testing.
+
+For a larger production experiment, the architecture can be connected to the **TMDB 5000 Movie Dataset**. The full external dataset is intentionally kept outside the repository to avoid unnecessary redistribution and repository bloat.
+
+See [DATA_CARD.md](DATA_CARD.md) for dataset details and limitations.
+
+## Engineering Highlights
+
+This project demonstrates:
+
+- modular ML architecture
+- NLP-based information retrieval
+- semantic search
+- hybrid recommendation systems
+- vector similarity
+- RAG architecture
+- LLM integration
+- prompt grounding
+- FastAPI REST APIs
+- Streamlit application development
+- dependency injection for testing
+- lazy model initialization
+- unit testing
+- GitHub Actions CI/CD foundations
+- configurable model and dataset paths
+
+## Future Improvements
+
+Planned production-level extensions include:
+
+- TMDB 5000 production dataset integration
+- persistent vector database
+- user-profile and interaction-based personalization
+- collaborative filtering
+- re-ranking model
+- recommendation evaluation metrics
+- structured LLM output
+- response caching
+- API authentication and rate limiting
+- Docker containerization
+- cloud deployment
+- experiment tracking
+- monitoring and observability
+
+## License
+
+This repository is intended as a portfolio and educational project.
