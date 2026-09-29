@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: ai-recommendation-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: RECOMMENDATION_DATASET
+        value: /app/data/raw/sample_movies.csv
+      - key: SEMANTIC_MODEL
+        value: all-MiniLM-L6-v2
+      - key: LLM_MODEL
+        value: EleutherAI/gpt-neo-125M
+
+  - type: web
+    name: ai-recommendation-ui
+    runtime: docker
+    dockerfilePath: ./Dockerfile.streamlit
+    dockerContext: .
+    envVars:
+      - key: API_URL
+        fromService:
+          type: web
+          name: ai-recommendation-api
+          property: host
