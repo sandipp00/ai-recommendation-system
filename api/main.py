@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
+import os
+from functools import lru_cache
 from pathlib import Path
-from typing import Callable
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from src.recommendation_pipeline import build_hybrid_recommender
+from src.llm_client import HuggingFaceLLM
 from src.rag_recommender import RAGRecommender
+from src.recommendation_pipeline import build_hybrid_recommender
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_DATASET = PROJECT_ROOT / "data" / "raw" / "sample_movies.csv"
 
 
 class RecommendationRequest(BaseModel):
@@ -40,8 +45,31 @@ class RecommendationResponse(BaseModel):
     explanation: str
 
 
+@lru_cache(maxsize=1)
+def build_service() -> RAGRecommender:
+    """Build the real retrieval + RAG service on first recommendation request."""
+    dataset_path = Path(
+        os.getenv("RECOMMENDATION_DATASET", str(DEFAULT_DATASET))
+    )
+    semantic_model = os.getenv(
+        "SEMANTIC_MODEL",
+        "all-MiniLM-L6-v2",
+    )
+    llm_model = os.getenv(
+        "LLM_MODEL",
+        "EleutherAI/gpt-neo-125M",
+    )
+
+    hybrid = build_hybrid_recommender(
+        dataset_path,
+        semantic_model=semantic_model,
+    )
+    llm = HuggingFaceLLM(model_name=llm_model)
+    return RAGRecommender(hybrid, llm)
+
+
 def create_app(rag_recommender: RAGRecommender | None = None) -> FastAPI:
-    """Create the FastAPI application with an optional injected service."""
+    """Create the FastAPI application with optional dependency injection."""
     app = FastAPI(
         title="AI Recommendation System API",
         version="0.1.0",
@@ -56,14 +84,10 @@ def create_app(rag_recommender: RAGRecommender | None = None) -> FastAPI:
 
     @app.post("/recommend", response_model=RecommendationResponse)
     def recommend(request: RecommendationRequest) -> RecommendationResponse:
-        if service is None:
-            raise HTTPException(
-                status_code=503,
-                detail="Recommendation service is not configured.",
-            )
+        active_service = service or build_service()
 
         try:
-            result = service.recommend(
+            result = active_service.recommend(
                 request.query,
                 top_k=request.top_k,
             )
