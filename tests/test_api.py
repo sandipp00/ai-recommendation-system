@@ -63,7 +63,14 @@ def test_recommend_endpoint_validates_top_k():
     assert response.status_code == 422
 
 
-def test_unconfigured_service_returns_503():
+def test_real_service_is_lazy(monkeypatch):
+    from api import main
+
+    class FailingService:
+        def recommend(self, query, top_k):
+            raise ValueError("test failure")
+
+    monkeypatch.setattr(main, "build_service", lambda: FailingService())
     client = TestClient(create_app())
 
     response = client.post(
@@ -71,4 +78,5 @@ def test_unconfigured_service_returns_503():
         json={"query": "test", "top_k": 1},
     )
 
-    assert response.status_code == 503
+    assert response.status_code == 400
+    assert response.json()["detail"] == "test failure"
