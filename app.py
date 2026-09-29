@@ -137,6 +137,22 @@ st.markdown(
         font-size: 0.78rem;
     }
 
+    div[data-testid="stHorizontalBlock"] button {
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.09);
+        background: rgba(255,255,255,0.035);
+        color: #b9bdca;
+        font-size: 0.78rem;
+        min-height: 2.25rem;
+        transition: all 0.2s ease;
+    }
+
+    div[data-testid="stHorizontalBlock"] button:hover {
+        border-color: rgba(139,124,255,0.45);
+        color: #ffffff;
+        background: rgba(139,124,255,0.10);
+    }
+
     .section-heading {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 1.45rem;
@@ -338,19 +354,24 @@ query = st.text_area(
     placeholder="Try: A dark sci-fi thriller about artificial intelligence with a mysterious atmosphere...",
     height=120,
     label_visibility="collapsed",
+    key="movie_query",
 )
 
-st.markdown(
-    """
-    <div>
-        <span class="prompt-chip">Dark sci-fi</span>
-        <span class="prompt-chip">Mind-bending thriller</span>
-        <span class="prompt-chip">Feel-good adventure</span>
-        <span class="prompt-chip">Emotional drama</span>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+# Clickable discovery prompts
+prompt_options = {
+    "Dark sci-fi": "A dark science-fiction movie with artificial intelligence and a mysterious atmosphere.",
+    "Mind-bending thriller": "A mind-bending thriller with mystery, suspense, and an unexpected story.",
+    "Feel-good adventure": "A feel-good adventure movie that is exciting, funny, and uplifting.",
+    "Emotional drama": "An emotional drama with strong characters, meaningful relationships, and a powerful story.",
+}
+
+prompt_columns = st.columns(len(prompt_options))
+
+for column, (label, prompt) in zip(prompt_columns, prompt_options.items()):
+    with column:
+        if st.button(label, use_container_width=True, key=f"prompt_{label}"):
+            st.session_state["movie_query"] = prompt
+            st.rerun()
 
 st.write("")
 
