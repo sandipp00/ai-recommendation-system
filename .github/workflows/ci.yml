@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -6,21 +6,69 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install dependencies
         run: python -m pip install --upgrade pip && pip install -r requirements.txt
-
       - name: Run tests
         run: pytest -q
+
+  docker-build:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+          tags: ai-recommendation-api:ci
+      - name: Build Streamlit image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.streamlit
+          push: false
+          tags: ai-recommendation-ui:ci
+
+  azure-deploy:
+    needs: [test, docker-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AZURE_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Build and push API image
+        run: az acr build --registry "${{ vars.AZURE_CONTAINER_REGISTRY }}" --image ai-recommendation-api:${{ github.sha }} --file Dockerfile .
+      - name: Build and push UI image
+        run: az acr build --registry "${{ vars.AZURE_CONTAINER_REGISTRY }}" --image ai-recommendation-ui:${{ github.sha }} --file Dockerfile.streamlit .
+      - name: Deploy API revision
+        run: az containerapp update --name "${{ vars.AZURE_API_APP_NAME }}" --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" --image "${{ vars.AZURE_CONTAINER_REGISTRY }}.azurecr.io/ai-recommendation-api:${{ github.sha }}"
+      - name: Deploy UI revision
+        run: az containerapp update --name "${{ vars.AZURE_UI_APP_NAME }}" --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" --image "${{ vars.AZURE_CONTAINER_REGISTRY }}.azurecr.io/ai-recommendation-ui:${{ github.sha }}"
