@@ -284,6 +284,11 @@ The API supports environment variables:
 | `RECOMMENDATION_DATASET` | `data/raw/sample_movies.csv` | Movie dataset |
 | `SEMANTIC_MODEL` | `all-MiniLM-L6-v2` | Sentence Transformer model |
 | `LLM_MODEL` | `EleutherAI/gpt-neo-125M` | Hugging Face causal language model |
+| `TMDB_ENABLED` | `false` | Enable live TMDB movie recommendations |
+| `TMDB_ACCESS_TOKEN` | unset | TMDB v4 API Read Access Token |
+| `TMDB_API_KEY` | unset | TMDB v3 API key alternative |
+| `TMDB_PAGES` | `3` | High-rated candidate pages to retrieve |
+| `TMDB_MINIMUM_VOTES` | `300` | Minimum TMDB votes for the high-rated pool |
 
 Example:
 
@@ -292,6 +297,23 @@ $env:LLM_MODEL="EleutherAI/gpt-neo-125M"
 $env:SEMANTIC_MODEL="all-MiniLM-L6-v2"
 uvicorn api.main:app --reload
 ```
+
+## Live TMDB Recommendation Mode
+
+The application can use TMDB as a live movie source for stronger recommendations. TMDB's developer API exposes movie metadata, ratings, vote counts, popularity, and discovery filters. The live provider is designed for Render Free: it retrieves a small candidate pool over HTTP and ranks it locally with TF-IDF rather than loading a large movie catalog or embedding model.
+
+Ranking in live mode:
+
+~~~text
+Final Score =
+0.55 × Query Relevance
++ 0.30 × Bayesian TMDB Rating
++ 0.15 × Current TMDB Popularity
+~~~
+
+Enable it with TMDB_ENABLED=true plus TMDB_ACCESS_TOKEN or TMDB_API_KEY. Credentials are never stored in the repository. See TMDB.md.
+
+TMDB data displayed by the application must include the attribution required by TMDB, and the project is intended for non-commercial use under TMDB's developer API terms.
 
 ## Recommendation Evaluation
 
