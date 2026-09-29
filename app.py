@@ -485,6 +485,108 @@ st.markdown(
         background: rgba(255,255,255,0.018);
     }
 
+    .explore-nav {
+        margin: 1.5rem 0 2rem 0;
+        padding: 0.35rem;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.025);
+    }
+
+    .explore-heading {
+        font-family: 'Space Grotesk', sans-serif;
+        color: #ffffff;
+        font-size: 1.9rem;
+        font-weight: 700;
+        letter-spacing: -0.035em;
+        margin: 0.6rem 0 0.3rem 0;
+    }
+
+    .explore-subtitle {
+        color: #858997;
+        font-size: 0.88rem;
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+    }
+
+    .collection-card {
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        background: linear-gradient(160deg, rgba(22,24,35,0.98), rgba(11,12,18,0.98));
+        box-shadow: 0 14px 38px rgba(0,0,0,0.22);
+        transition: transform 0.2s ease, border-color 0.2s ease;
+        min-height: 390px;
+    }
+
+    .collection-card:hover {
+        border-color: rgba(139,124,255,0.32);
+        transform: translateY(-2px);
+    }
+
+    .collection-poster {
+        width: 100%;
+        height: 245px;
+        object-fit: cover;
+        display: block;
+        background: #11131b;
+    }
+
+    .collection-body {
+        padding: 0.9rem;
+    }
+
+    .collection-title {
+        font-family: 'Space Grotesk', sans-serif;
+        color: #ffffff;
+        font-size: 0.96rem;
+        font-weight: 700;
+        line-height: 1.3;
+        margin-bottom: 0.45rem;
+    }
+
+    .collection-meta {
+        color: #8e92a3;
+        font-size: 0.7rem;
+    }
+
+    .collection-rating {
+        color: #f6d36b;
+        font-weight: 700;
+    }
+
+    .collection-overview {
+        color: #8f93a2;
+        font-size: 0.72rem;
+        line-height: 1.5;
+        margin-top: 0.55rem;
+    }
+
+    .feature-strip {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin: 0.8rem 0 1.2rem 0;
+    }
+
+    .feature-pill {
+        padding: 0.42rem 0.65rem;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 999px;
+        background: rgba(255,255,255,0.03);
+        color: #9296a6;
+        font-size: 0.68rem;
+    }
+
+    .feature-pill strong {
+        color: #d9dbe3;
+    }
+
+    .more-button button {
+        width: 100%;
+        border-radius: 10px !important;
+    }
+
     .footer {
         color: #646876;
         text-align: center;
@@ -569,6 +671,13 @@ with st.sidebar:
                 st.session_state["_pending_movie_query"] = prompt
                 st.rerun()
 
+    mood = st.selectbox(
+        "Mood",
+        ["Any mood", "Dark & mysterious", "Feel-good & uplifting", "Intense & suspenseful", "Emotional & heartfelt", "Mind-bending & surreal"],
+        label_visibility="collapsed",
+        key="mood_preference",
+    )
+
     st.markdown(
         """
         <div class="api-status-card">
@@ -601,6 +710,71 @@ with st.sidebar:
     )
 
 # ---------------------------------------------------------------------------
+# Discovery helpers
+# ---------------------------------------------------------------------------
+@st.cache_data(ttl=600, show_spinner=False)
+def fetch_collection(endpoint: str, category: str) -> list[dict]:
+    """Fetch a live discovery collection from the FastAPI backend."""
+    response = requests.get(
+        f"{endpoint.rstrip('/')}/browse/{category}",
+        timeout=45,
+    )
+    response.raise_for_status()
+    return response.json().get("items", [])
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def fetch_similar(endpoint: str, movie_id: int) -> list[dict]:
+    """Fetch live TMDB recommendations for a movie."""
+    response = requests.get(
+        f"{endpoint.rstrip('/')}/movie/{int(movie_id)}/similar",
+        timeout=45,
+    )
+    response.raise_for_status()
+    return response.json().get("items", [])
+
+
+def movie_card_html(movie: dict, compact: bool = False) -> str:
+    """Build a poster-first movie card."""
+    title = html.escape(str(movie.get("title", "Untitled")))
+    overview = html.escape(str(movie.get("overview", "")))
+    poster_url = str(movie.get("poster_url", "") or "")
+    rating = movie.get("vote_average")
+    year = movie.get("release_year")
+    genres = str(movie.get("genres", "") or "")
+
+    if poster_url:
+        poster = f'<img class="collection-poster" src="{html.escape(poster_url)}" alt="{title} poster">'
+    else:
+        poster = '<div class="collection-poster"></div>'
+
+    rating_text = f"★ {float(rating):.1f}" if rating is not None else "—"
+    year_text = str(int(year)) if year else "—"
+    genre_text = " · ".join(
+        html.escape(part.strip()) for part in genres.split("|") if part.strip()
+    )
+    if compact:
+        overview_html = ""
+    else:
+        overview_html = f'<div class="collection-overview">{overview[:180]}{"…" if len(overview) > 180 else ""}</div>'
+
+    return f"""
+    <div class="collection-card">
+        {poster}
+        <div class="collection-body">
+            <div class="collection-title">{title}</div>
+            <div class="collection-meta">
+                <span class="collection-rating">{rating_text}</span>
+                &nbsp; · &nbsp; {year_text}
+                {f"&nbsp; · &nbsp; {genre_text}" if genre_text else ""}
+            </div>
+            {overview_html}
+        </div>
+    </div>
+    """
+
+
+# ---------------------------------------------------------------------------
 # Hero
 # ---------------------------------------------------------------------------
 st.markdown(
@@ -609,142 +783,246 @@ st.markdown(
         <span class="eyebrow">AI MOVIE DISCOVERY</span>
         <h1>Find a movie that feels<br><span class="accent">made for you.</span></h1>
         <p>
-            Tell CineMind what you are in the mood for. The recommendation
-            engine combines content matching, ranking signals, and grounded
-            AI explanations to surface relevant titles.
+            Describe a mood, story, genre, character, or atmosphere.
+            CineMind combines live TMDB movie intelligence with AI-powered
+            retrieval to turn your words into personalized recommendations.
         </p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-st.markdown('<div class="search-label">Describe what you want to watch</div>', unsafe_allow_html=True)
+nav_options = [
+    "✦ AI Discovery",
+    "🔥 Trending",
+    "🏆 Top Rated",
+    "🆕 New Releases",
+    "💎 Hidden Gems",
+]
+if "discovery_mode" not in st.session_state:
+    st.session_state["discovery_mode"] = nav_options[0]
 
-# Apply a prompt selected from a discovery chip before the text-area widget
-# is instantiated. Streamlit does not allow changing a widget's keyed state
-# after that widget has already been created in the current run.
-if "_pending_movie_query" in st.session_state:
-    st.session_state["movie_query"] = st.session_state.pop("_pending_movie_query")
-
-query = st.text_area(
-    "movie_query",
-    placeholder="Try: A dark sci-fi thriller about artificial intelligence with a mysterious atmosphere...",
-    height=120,
+st.markdown('<div class="explore-nav">', unsafe_allow_html=True)
+mode = st.radio(
+    "Discovery mode",
+    nav_options,
+    horizontal=True,
     label_visibility="collapsed",
-    key="movie_query",
+    key="discovery_mode",
 )
+st.markdown("</div>", unsafe_allow_html=True)
 
-# Clickable discovery prompts
-prompt_options = {
-    "Dark sci-fi": "A dark science-fiction movie with artificial intelligence and a mysterious atmosphere.",
-    "Mind-bending thriller": "A mind-bending thriller with mystery, suspense, and an unexpected story.",
-    "Feel-good adventure": "A feel-good adventure movie that is exciting, funny, and uplifting.",
-    "Emotional drama": "An emotional drama with strong characters, meaningful relationships, and a powerful story.",
-}
+if mode == "✦ AI Discovery":
+    st.markdown(
+        '<div class="search-label">What are you in the mood for?</div>',
+        unsafe_allow_html=True,
+    )
 
-prompt_columns = st.columns(len(prompt_options))
+    if "_pending_movie_query" in st.session_state:
+        st.session_state["movie_query"] = st.session_state.pop("_pending_movie_query")
 
-for column, (label, prompt) in zip(prompt_columns, prompt_options.items()):
-    with column:
-        if st.button(label, use_container_width=True, key=f"prompt_{label}"):
-            st.session_state["_pending_movie_query"] = prompt
-            st.rerun()
+    query = st.text_area(
+        "movie_query",
+        placeholder="Try: A dark sci-fi thriller about artificial intelligence with a mysterious atmosphere...",
+        height=125,
+        label_visibility="collapsed",
+        key="movie_query",
+    )
 
-st.write("")
+    prompt_options = {
+        "Dark sci-fi": "A dark science-fiction movie with artificial intelligence and a mysterious atmosphere.",
+        "Mind-bending": "A mind-bending thriller with mystery, suspense, and an unexpected story.",
+        "Feel-good": "A feel-good adventure movie that is exciting, funny, and uplifting.",
+        "Emotional": "An emotional drama with strong characters, meaningful relationships, and a powerful story.",
+    }
 
-if st.button("✦  Discover Movies", type="primary", use_container_width=True):
-    if not query.strip():
-        st.warning("Tell me what kind of movie you want first.")
-    else:
-        with st.spinner("Searching the movie universe..."):
-            try:
-                response = requests.post(
-                    f"{api_url.rstrip('/')}/recommend",
-                    json={"query": query.strip(), "top_k": top_k},
-                    timeout=120,
-                )
-                response.raise_for_status()
-                data = response.json()
-            except requests.RequestException as exc:
-                st.error("The recommendation API could not be reached.")
-                st.caption(str(exc))
-            else:
-                recommendations = data.get("recommendations", [])
+    prompt_columns = st.columns(len(prompt_options))
+    for column, (label, prompt) in zip(prompt_columns, prompt_options.items()):
+        with column:
+            if st.button(label, use_container_width=True, key=f"main_{label}"):
+                st.session_state["_pending_movie_query"] = prompt
+                st.rerun()
 
-                st.markdown(
-                    f'<div class="section-heading">Your matches <span style="color:#777b89;font-size:0.9rem;">· {len(recommendations)} found</span></div>',
-                    unsafe_allow_html=True,
-                )
+    st.write("")
 
-                if not recommendations:
-                    st.info("No recommendations were returned for this query.")
+    if st.button("✦  Find My Movies", type="primary", use_container_width=True):
+        if not query.strip():
+            st.warning("Tell me what kind of movie you want first.")
+        else:
+            final_query = query.strip()
+            if mood != "Any mood":
+                final_query = f"{final_query}. Preferred mood: {mood}."
+
+            with st.spinner("Reading the movie universe..."):
+                try:
+                    response = requests.post(
+                        f"{api_url.rstrip('/')}/recommend",
+                        json={"query": final_query, "top_k": top_k},
+                        timeout=120,
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                except requests.RequestException as exc:
+                    st.error("The recommendation API could not be reached.")
+                    st.caption(str(exc))
                 else:
-                    columns = st.columns(2)
+                    recommendations = data.get("recommendations", [])
 
-                    for index, movie in enumerate(recommendations, start=1):
-                        title = html.escape(str(movie.get("title", "Untitled")))
-                        overview = html.escape(str(movie.get("overview", "")))
-                        genres = str(movie.get("genres", "") or "")
-                        poster_url = str(movie.get("poster_url", "") or "")
-                        vote_average = movie.get("vote_average")
-                        vote_count = movie.get("vote_count")
-                        release_year = movie.get("release_year")
+                    st.markdown(
+                        f'<div class="section-heading">Picked for you <span style="color:#777b89;font-size:0.9rem;">· {len(recommendations)} matches</span></div>',
+                        unsafe_allow_html=True,
+                    )
 
-                        genre_html = "".join(
-                            f'<span class="genre">{html.escape(g.strip())}</span>'
-                            for g in genres.split("|")
-                            if g.strip()
-                        )
+                    if not recommendations:
+                        st.info("No recommendations were returned for this query.")
+                    else:
+                        columns = st.columns(2)
+                        for index, movie in enumerate(recommendations, start=1):
+                            title = html.escape(str(movie.get("title", "Untitled")))
+                            overview = html.escape(str(movie.get("overview", "")))
+                            genres = str(movie.get("genres", "") or "")
+                            poster_url = str(movie.get("poster_url", "") or "")
+                            vote_average = movie.get("vote_average")
+                            vote_count = movie.get("vote_count")
+                            release_year = movie.get("release_year")
+                            tmdb_id = movie.get("tmdb_id")
 
-                        rating_html = ""
-                        if vote_average is not None:
-                            rating_html = f'<span class="movie-rating">★ {float(vote_average):.1f}</span>'
-                            if vote_count is not None:
-                                rating_html += f'<span class="movie-votes">{int(vote_count):,} votes</span>'
-                        year_html = f'<span class="movie-year">{int(release_year)}</span>' if release_year else ""
-                        poster_html = (
-                            f'<img class="movie-poster" src="{html.escape(poster_url)}" alt="{title} poster">'
-                            if poster_url else ""
-                        )
+                            genre_html = "".join(
+                                f'<span class="genre">{html.escape(g.strip())}</span>'
+                                for g in genres.split("|")
+                                if g.strip()
+                            )
 
-                        card = f"""
-                        <div class="movie-card">
-                            {poster_html}
-                            <div class="movie-content">
-                                <div class="movie-number">MATCH {index:02d}</div>
-                                <div class="movie-title">{title}</div>
-                                <div class="movie-meta">{rating_html}{year_html}</div>
-                                <div>{genre_html}</div>
-                                <div class="movie-overview">{overview}</div>
-                                <div class="score-row">
-                                    <div class="score">Match <strong>{float(movie.get("score", 0)):.3f}</strong></div>
-                                <div class="score">Content <strong>{float(movie.get("content_score", 0)):.3f}</strong></div>
-                                <div class="score">Semantic <strong>{float(movie.get("semantic_score", 0)):.3f}</strong></div>
-                                    <div class="score">Rating <strong>{float(movie.get("popularity_score", 0)):.3f}</strong></div>
+                            rating_html = ""
+                            if vote_average is not None:
+                                rating_html = f'<span class="movie-rating">★ {float(vote_average):.1f}</span>'
+                                if vote_count is not None:
+                                    rating_html += f'<span class="movie-votes">{int(vote_count):,} votes</span>'
+                            year_html = f'<span class="movie-year">{int(release_year)}</span>' if release_year else ""
+                            poster_html = (
+                                f'<img class="movie-poster" src="{html.escape(poster_url)}" alt="{title} poster">'
+                                if poster_url else ""
+                            )
+
+                            card = f"""
+                            <div class="movie-card">
+                                {poster_html}
+                                <div class="movie-content">
+                                    <div class="movie-number">MATCH {index:02d}</div>
+                                    <div class="movie-title">{title}</div>
+                                    <div class="movie-meta">{rating_html}{year_html}</div>
+                                    <div>{genre_html}</div>
+                                    <div class="movie-overview">{overview}</div>
+                                    <div class="score-row">
+                                        <div class="score">Match <strong>{float(movie.get("score", 0)):.3f}</strong></div>
+                                        <div class="score">Content <strong>{float(movie.get("content_score", 0)):.3f}</strong></div>
+                                        <div class="score">Rating <strong>{float(movie.get("popularity_score", 0)):.3f}</strong></div>
+                                    </div>
                                 </div>
                             </div>
+                            """
+
+                            with columns[(index - 1) % 2]:
+                                st.markdown(card, unsafe_allow_html=True)
+                                if tmdb_id:
+                                    if st.button(
+                                        f"More like {title}",
+                                        key=f"similar_{tmdb_id}_{index}",
+                                        use_container_width=True,
+                                    ):
+                                        st.session_state["selected_movie_id"] = int(tmdb_id)
+                                        st.session_state["selected_movie_title"] = html.unescape(title)
+                                        st.rerun()
+
+                    explanation = html.escape(str(data.get("explanation", "")))
+                    st.markdown(
+                        '<div class="section-heading">Why these matches?</div>',
+                        unsafe_allow_html=True,
+                    )
+                    st.markdown(
+                        f"""
+                        <div class="ai-panel">
+                            <div class="ai-label">✦ Grounded AI explanation</div>
+                            {explanation}
                         </div>
-                        """
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
-                        with columns[(index - 1) % 2]:
-                            st.markdown(card, unsafe_allow_html=True)
+    if st.session_state.get("selected_movie_id"):
+        selected_id = int(st.session_state["selected_movie_id"])
+        selected_title = html.escape(str(st.session_state.get("selected_movie_title", "this movie")))
+        st.markdown(
+            f'<div class="section-heading">Because you liked {selected_title}</div>',
+            unsafe_allow_html=True,
+        )
+        try:
+            similar = fetch_similar(api_url, selected_id)
+            if similar:
+                cols = st.columns(5)
+                for idx, movie in enumerate(similar[:5]):
+                    with cols[idx]:
+                        st.markdown(movie_card_html(movie, compact=True), unsafe_allow_html=True)
+            else:
+                st.info("TMDB did not return similar movies for this title.")
+        except requests.RequestException:
+            st.info("Similar-movie discovery is temporarily unavailable.")
 
-                explanation = html.escape(str(data.get("explanation", "")))
-                st.markdown(
-                    """
-                    <div class="section-heading">Why these movies?</div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                st.markdown(
-                    f"""
-                    <div class="ai-panel">
-                        <div class="ai-label">✦ Grounded AI explanation</div>
-                        {explanation}
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+else:
+    category_map = {
+        "🔥 Trending": ("trending", "What's moving right now"),
+        "🏆 Top Rated": ("top-rated", "Highly rated movies with a strong vote history"),
+        "🆕 New Releases": ("new-releases", "Movies released in the last few months"),
+        "💎 Hidden Gems": ("hidden-gems", "Well-rated movies that are less dominated by huge vote counts"),
+    }
+    category, subtitle = category_map[mode]
+
+    st.markdown(
+        f"""
+        <div class="explore-heading">{mode}</div>
+        <div class="explore-subtitle">{subtitle}</div>
+        <div class="feature-strip">
+            <span class="feature-pill"><strong>TMDB</strong> live data</span>
+            <span class="feature-pill"><strong>Posters</strong> & ratings</span>
+            <span class="feature-pill"><strong>Updated</strong> on request</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    try:
+        collection = fetch_collection(api_url, category)
+        if not collection:
+            st.info("No movies were returned for this collection.")
+        else:
+            cols = st.columns(4)
+            for index, movie in enumerate(collection[:12]):
+                with cols[index % 4]:
+                    st.markdown(movie_card_html(movie), unsafe_allow_html=True)
+                    movie_id = movie.get("tmdb_id")
+                    if movie_id and st.button(
+                        "More like this",
+                        key=f"collection_similar_{category}_{movie_id}",
+                        use_container_width=True,
+                    ):
+                        st.session_state["selected_movie_id"] = int(movie_id)
+                        st.session_state["selected_movie_title"] = str(movie.get("title", "this movie"))
+                        st.session_state["discovery_mode"] = "✦ AI Discovery"
+                        st.rerun()
+    except requests.RequestException as exc:
+        st.error("Live TMDB discovery is unavailable right now.")
+        st.caption(str(exc))
+
+    st.markdown(
+        """
+        <div class="ai-panel" style="margin-top:1.5rem;">
+            <div class="ai-label">✦ Next step</div>
+            Switch to <strong>AI Discovery</strong> and describe what you want to watch.
+            CineMind can then combine your natural-language request with live movie data.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 st.markdown(
     """
