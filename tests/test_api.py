@@ -80,3 +80,60 @@ def test_real_service_is_lazy(monkeypatch):
 
     assert response.status_code == 400
     assert response.json()["detail"] == "test failure"
+
+
+class FakeLiveTMDB:
+    def genre_map(self):
+        return {878: "Science Fiction", 53: "Thriller"}
+
+    def trending_movies(self, window="week"):
+        return [
+            {
+                "id": 42,
+                "title": "Trending AI",
+                "overview": "A futuristic thriller.",
+                "genre_ids": [878, 53],
+                "vote_average": 8.4,
+                "vote_count": 5000,
+                "popularity": 120.0,
+                "release_date": "2026-01-01",
+                "poster_path": "/poster.jpg",
+            }
+        ]
+
+    def discover_movies(self, **kwargs):
+        return self.trending_movies()
+
+    def movie_recommendations(self, movie_id):
+        return self.trending_movies()
+
+
+def test_tmdb_browse_endpoint(monkeypatch):
+    from api import main
+
+    monkeypatch.setenv("TMDB_ENABLED", "true")
+    monkeypatch.setenv("TMDB_API_KEY", "test-key")
+    monkeypatch.setattr(main, "TMDBClient", lambda: FakeLiveTMDB())
+
+    client = TestClient(create_app())
+    response = client.get("/browse/trending")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["category"] == "trending"
+    assert payload["items"][0]["title"] == "Trending AI"
+    assert payload["items"][0]["tmdb_id"] == 42
+
+
+def test_tmdb_similar_endpoint(monkeypatch):
+    from api import main
+
+    monkeypatch.setenv("TMDB_ENABLED", "true")
+    monkeypatch.setenv("TMDB_API_KEY", "test-key")
+    monkeypatch.setattr(main, "TMDBClient", lambda: FakeLiveTMDB())
+
+    client = TestClient(create_app())
+    response = client.get("/movie/42/similar")
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["tmdb_id"] == 42
