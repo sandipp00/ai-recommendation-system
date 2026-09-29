@@ -153,6 +153,44 @@ st.markdown(
         background: rgba(139,124,255,0.10);
     }
 
+    .movie-card {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .movie-poster {
+        width: 82px;
+        min-width: 82px;
+        height: 122px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: #11131b;
+    }
+
+    .movie-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .movie-meta {
+        display: flex;
+        gap: 0.55rem;
+        align-items: center;
+        margin: 0.45rem 0 0.65rem 0;
+        font-size: 0.76rem;
+    }
+
+    .movie-rating {
+        color: #f6d36b;
+        font-weight: 700;
+    }
+
+    .movie-votes, .movie-year {
+        color: #858997;
+    }
+
     .section-heading {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 1.45rem;
