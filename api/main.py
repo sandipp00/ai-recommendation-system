@@ -80,7 +80,7 @@ def create_app(rag_recommender: RAGRecommender | None = None) -> FastAPI:
 
     @app.get("/health")
     def health() -> dict[str, str]:
-        return {"status": "ok"}
+        return {"status": "ok", "service": "recommendation-api"}
 
     @app.post("/recommend", response_model=RecommendationResponse)
     def recommend(request: RecommendationRequest) -> RecommendationResponse:
