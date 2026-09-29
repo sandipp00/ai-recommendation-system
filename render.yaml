@@ -22,7 +22,4 @@ services:
     dockerContext: .
     envVars:
       - key: API_URL
-        fromService:
-          type: web
-          name: ai-recommendation-api
-          property: host
+        value: https://ai-recommendation-api-qa00.onrender.com
