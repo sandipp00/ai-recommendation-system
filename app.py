@@ -305,32 +305,39 @@ st.markdown(
         margin-top: 0.9rem;
     }
 
+    [data-testid="stSidebar"] {
+        min-width: 310px;
+    }
+
     .sidebar-brand {
+        padding: 0.25rem 0 1.4rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        margin-bottom: 1.35rem;
+    }
+
+    .sidebar-brand-row {
         display: flex;
         align-items: center;
         gap: 0.7rem;
-        padding: 0.15rem 0 1.8rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.07);
-        margin-bottom: 1.7rem;
     }
 
     .sidebar-logo {
-        width: 34px;
-        height: 34px;
+        width: 38px;
+        height: 38px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 11px;
-        background: linear-gradient(135deg, #7c68ff, #4cbfe9);
+        border-radius: 12px;
+        background: linear-gradient(135deg, #8b7cff, #4cbfe9);
         color: #ffffff;
-        font-size: 1rem;
-        box-shadow: 0 8px 22px rgba(91, 99, 255, 0.25);
+        font-size: 1.05rem;
+        box-shadow: 0 10px 26px rgba(91, 99, 255, 0.28);
     }
 
     .sidebar-brand-name {
         font-family: 'Space Grotesk', sans-serif;
         color: #ffffff;
-        font-size: 0.95rem;
+        font-size: 1rem;
         font-weight: 700;
         letter-spacing: 0.02em;
     }
@@ -339,44 +346,92 @@ st.markdown(
         color: #8f82ff;
     }
 
+    .sidebar-tagline {
+        color: #777c8d;
+        font-size: 0.68rem;
+        margin: 0.65rem 0 0 0;
+        line-height: 1.5;
+    }
+
+    .live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.8rem;
+        padding: 0.34rem 0.58rem;
+        border: 1px solid rgba(100,217,255,0.18);
+        border-radius: 999px;
+        background: rgba(100,217,255,0.06);
+        color: #79ddff;
+        font-size: 0.63rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+    }
+
+    .live-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #5fe0ff;
+        box-shadow: 0 0 10px rgba(95,224,255,0.8);
+    }
+
     .sidebar-section-label {
         color: #666b7b;
-        font-size: 0.66rem;
+        font-size: 0.64rem;
         font-weight: 700;
         letter-spacing: 0.12em;
         text-transform: uppercase;
         margin: 0.2rem 0 0.7rem 0;
     }
 
-    .settings-card {
-        padding: 0.9rem;
-        margin: 0.5rem 0 0.9rem 0;
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 15px;
-        background: rgba(255,255,255,0.025);
+    .discovery-card {
+        padding: 1rem;
+        margin: 0.45rem 0 1rem 0;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 17px;
+        background:
+            radial-gradient(circle at 100% 0%, rgba(139,124,255,0.12), transparent 45%),
+            rgba(255,255,255,0.025);
     }
 
-    .settings-title {
+    .discovery-title {
         color: #f2f3f6;
-        font-size: 0.84rem;
-        font-weight: 600;
-        margin-bottom: 0.15rem;
+        font-size: 0.86rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
     }
 
-    .settings-subtitle {
+    .discovery-subtitle {
         color: #777c8d;
-        font-size: 0.7rem;
+        font-size: 0.68rem;
+        line-height: 1.5;
+        margin-bottom: 0.65rem;
+    }
+
+    .sidebar-vibe-title {
+        color: #bfc3d0;
+        font-size: 0.72rem;
+        font-weight: 600;
+        margin: 1.1rem 0 0.45rem 0;
+    }
+
+    .vibe-caption {
+        color: #686d7c;
+        font-size: 0.64rem;
+        margin: -0.15rem 0 0.55rem 0;
     }
 
     .api-status-card {
         display: flex;
         align-items: center;
         gap: 0.7rem;
-        padding: 0.85rem 0.9rem;
-        margin-top: 1.5rem;
-        border: 1px solid rgba(64,210,150,0.16);
-        border-radius: 15px;
-        background: linear-gradient(135deg, rgba(64,210,150,0.06), rgba(64,210,150,0.025));
+        padding: 0.82rem 0.9rem;
+        margin-top: 1.15rem;
+        border: 1px solid rgba(64,210,150,0.15);
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(64,210,150,0.055), rgba(64,210,150,0.018));
     }
 
     .api-dot {
@@ -390,33 +445,44 @@ st.markdown(
 
     .api-status-title {
         color: #d8f8e8;
-        font-size: 0.76rem;
-        font-weight: 600;
+        font-size: 0.75rem;
+        font-weight: 700;
     }
 
     .api-status-subtitle {
         color: #718879;
-        font-size: 0.65rem;
+        font-size: 0.64rem;
         margin-top: 0.12rem;
     }
 
-    [data-testid="stSidebar"] div[data-testid="stSlider"] {
-        padding-top: 0.2rem;
+    [data-testid="stSidebar"] .stSelectbox > div > div {
+        background: rgba(255,255,255,0.035);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 11px;
     }
 
-    [data-testid="stSidebar"] div[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] {
-        background: #8b7cff;
-        border-color: #8b7cff;
+    [data-testid="stSidebar"] .stButton > button {
+        min-height: 2.25rem;
+        border-radius: 11px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.03);
+        color: #bfc3d0;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.35rem 0.5rem;
     }
 
-    [data-testid="stSidebar"] div[data-testid="stSlider"] [data-baseweb="slider"] > div > div {
-        background: linear-gradient(90deg, #7c68ff, #4cbfe9);
+    [data-testid="stSidebar"] .stButton > button:hover {
+        border-color: rgba(139,124,255,0.45);
+        background: rgba(139,124,255,0.10);
+        color: #ffffff;
     }
 
     [data-testid="stSidebar"] .stExpander {
+        margin-top: 0.9rem;
         border: 1px solid rgba(255,255,255,0.07);
         border-radius: 13px;
-        background: rgba(255,255,255,0.02);
+        background: rgba(255,255,255,0.018);
     }
 
     .footer {
@@ -453,59 +519,70 @@ with st.sidebar:
     st.markdown(
         """
         <div class="sidebar-brand">
-            <div class="sidebar-logo">✦</div>
-            <div class="sidebar-brand-name">CINEMIND <span>AI</span></div>
+            <div class="sidebar-brand-row">
+                <div class="sidebar-logo">✦</div>
+                <div class="sidebar-brand-name">CINEMIND <span>AI</span></div>
+            </div>
+            <div class="sidebar-tagline">Personalized discovery for your next great watch.</div>
+            <div class="live-badge"><span class="live-dot"></span> Live movie intelligence</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    st.markdown('<div class="sidebar-section-label">Discovery</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-section-label">Tune your discovery</div>', unsafe_allow_html=True)
 
     st.markdown(
         """
-        <div class="settings-card">
-            <div class="settings-title">Recommendation depth</div>
-            <div class="settings-subtitle">How many matches should we find?</div>
+        <div class="discovery-card">
+            <div class="discovery-title">Recommendation depth</div>
+            <div class="discovery-subtitle">Choose how wide you want the search to explore.</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    top_k = st.slider(
-        "Recommendation count",
-        min_value=1,
-        max_value=10,
-        value=5,
+    result_options = [4, 5, 6, 8, 10]
+    top_k = st.selectbox(
+        "Number of recommendations",
+        options=result_options,
+        index=1,
+        format_func=lambda value: f"{value} movies",
         label_visibility="collapsed",
-        help="Number of movies returned by each search.",
+        key="recommendation_count",
     )
 
-    st.markdown(
-        f"""
-        <div style="display:flex;justify-content:space-between;color:#777c8d;font-size:0.68rem;margin-top:-0.25rem;">
-            <span>Focused</span>
-            <strong style="color:#bdb6ff;">{top_k} matches</strong>
-            <span>Explore</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="sidebar-vibe-title">Quick vibes</div>', unsafe_allow_html=True)
+    st.markdown('<div class="vibe-caption">Start with a mood — you can edit it afterward.</div>', unsafe_allow_html=True)
+
+    sidebar_prompts = {
+        "🌌 Sci-Fi": "A dark science-fiction movie with artificial intelligence and a mysterious atmosphere.",
+        "🧠 Mind-bending": "A mind-bending thriller with mystery, suspense, and an unexpected story.",
+        "✨ Feel-good": "A feel-good adventure movie that is exciting, funny, and uplifting.",
+        "🎭 Emotional": "An emotional drama with strong characters, meaningful relationships, and a powerful story.",
+    }
+
+    vibe_columns = st.columns(2)
+    for column, (label, prompt) in zip(vibe_columns * 2, sidebar_prompts.items()):
+        with column:
+            if st.button(label, use_container_width=True, key=f"sidebar_{label}"):
+                st.session_state["_pending_movie_query"] = prompt
+                st.rerun()
 
     st.markdown(
         """
         <div class="api-status-card">
             <div class="api-dot"></div>
             <div>
-                <div class="api-status-title">Recommendation engine online</div>
-                <div class="api-status-subtitle">FastAPI · live connection</div>
+                <div class="api-status-title">Engine ready</div>
+                <div class="api-status-subtitle">FastAPI · TMDB live data</div>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    with st.expander("Advanced settings"):
+    with st.expander("⚙ Connection settings"):
         api_url = st.text_input(
             "API endpoint",
             value=API_URL,
@@ -515,8 +592,9 @@ with st.sidebar:
     st.markdown(
         """
         <div class="sidebar-note">
-            Describe a mood, genre, story, character, or theme.
-            CineMind turns your words into ranked movie matches.
+            <strong style="color:#bfc3d0;">Tip</strong><br>
+            Be specific about mood, genre, themes, pacing, or story style.
+            CineMind uses those signals to find closer matches.
         </div>
         """,
         unsafe_allow_html=True,
