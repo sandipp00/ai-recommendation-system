@@ -293,6 +293,9 @@ $env:SEMANTIC_MODEL="all-MiniLM-L6-v2"
 uvicorn api.main:app --reload
 ```
 
+## Recommendation Evaluation
+
+The repository includes ranking metrics in `src/evaluation.py`: Precision@K, Recall@K, Hit Rate@K, and NDCG@K. See [EVALUATION.md](EVALUATION.md) for the benchmark methodology and the distinction between synthetic development labels and production ground truth.
 ## Testing
 
 Run the complete test suite:
