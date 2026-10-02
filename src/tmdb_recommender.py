@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 from math import log
 
 import pandas as pd
@@ -43,6 +44,7 @@ class TMDBLiveRecommender:
         self.minimum_votes = minimum_votes
         self._genres: dict[int, str] | None = None
 
+    @lru_cache(maxsize=1)
     def _candidate_frame(self) -> pd.DataFrame:
         """Build a small live candidate pool from high-rated and popular movies."""
         rows: dict[int, dict] = {}
